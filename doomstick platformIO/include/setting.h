@@ -1,0 +1,27 @@
+/*
+    doomstick (subset of doomBOX by Richard Gladson)
+    Copyright (c) 2026 Richard Gladson
+    Licensed under the GNU General Public License v3.0
+    SPDX-License-Identifier: GPL-3.0-only
+*/
+#ifndef setting_H
+#define setting_H
+
+#include <U8g2lib.h>
+
+extern bool neoPixelActive;
+extern bool dangerousActionsEnabled;
+extern bool continuousScanEnabled;
+extern bool privacyModeEnabled;
+
+void settingSetup();
+void settingLoop();
+bool isDangerousActionsEnabled();
+bool isContinuousScanEnabled();
+bool isPrivacyModeEnabled();
+
+void maskMAC(const char* original, char* masked);
+void maskName(const char* original, char* masked, int maxLen);
+void maskNameEvilPortal(const char* original, char* masked, int maxLen, const char* customSSIDs[], int customSSIDCount);
+
+#endif
