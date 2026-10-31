@@ -734,58 +734,65 @@ static void processScanResults() {
 // ---------------------------------------------------------------------------
 static void drawMenu() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 10, "Handshake Capture");
-    u8g2.drawStr(0, 28, menuSelection == 0 ? "> Capture" : "  Capture");
-    u8g2.drawStr(0, 42, menuSelection == 1 ? "> View Saved" : "  View Saved");
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 62, "U/D R=Select");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "HS Capture");
+    u8g2.drawHLine(0, 14, 64);
+    u8g2.drawStr(2, 32, menuSelection == 0 ? "> Capture" : "  Capture");
+    u8g2.drawStr(2, 48, menuSelection == 1 ? "> View Saved" : "  View Saved");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawHLine(0, 118, 64);
+    u8g2.drawStr(2, 126, "MOVE next  SEL ok");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 static void drawScanning() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 10, "Scanning APs...");
-    char buf[24];
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Scanning...");
+    u8g2.drawHLine(0, 14, 64);
+    char buf[20];
     snprintf(buf, sizeof(buf), "Found: %u", (unsigned)currentScanCount);
-    u8g2.drawStr(0, 28, buf);
-    u8g2.drawFrame(0, 40, 128, 10);
+    u8g2.drawStr(2, 32, buf);
+    u8g2.drawFrame(4, 48, 56, 8);
     unsigned long elapsed = millis() - scanStartTime;
-    int fill = (int)((elapsed * 124) / SCAN_DURATION);
-    if (fill > 124) fill = 124;
-    if (fill > 0) u8g2.drawBox(2, 42, fill, 6);
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 62, "Please wait");
+    int fill = (int)((elapsed * 52) / SCAN_DURATION);
+    if (fill > 52) fill = 52;
+    if (fill > 0) u8g2.drawBox(6, 50, fill, 4);
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 126, "Please wait");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 static void drawList() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 10, "Select AP:");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Select AP");
+    u8g2.drawHLine(0, 14, 64);
     if (apCount == 0) {
-        u8g2.drawStr(0, 28, "No APs found");
-        u8g2.setFont(u8g2_font_5x8_tr);
-        u8g2.drawStr(0, 62, "L=Back");
+        u8g2.drawStr(2, 36, "No APs");
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawStr(2, 126, "SEL back");
     } else {
         if (apIndex >= apCount) apIndex = apCount - 1;
-        int start = apIndex > 0 ? apIndex - 1 : 0;
-        if (apIndex == apCount - 1 && apCount > 2) start = apCount - 3;
+        // show more items thanks to taller screen
+        int start = apIndex - 2;
         if (start < 0) start = 0;
-        for (int i = 0; i < 3; i++) {
+        if (start > apCount - 6) start = max(0, apCount - 6);
+        for (int i = 0; i < 6; i++) {
             int idx = start + i;
             if (idx >= apCount) break;
-            char line[22], shortS[14];
-            strncpy(shortS, apList[idx].ssid, 13);
-            shortS[13] = '\0';
+            char line[14], shortS[11];
+            strncpy(shortS, apList[idx].ssid, 10);
+            shortS[10] = '\0';
             snprintf(line, sizeof(line), "%s%s", idx == apIndex ? ">" : " ", shortS);
-            u8g2.drawStr(0, 24 + i * 12, line);
+            u8g2.drawStr(2, 26 + i * 12, line);
         }
-        u8g2.setFont(u8g2_font_5x8_tr);
-        u8g2.drawStr(0, 62, "U/D R=Start L=Back");
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawHLine(0, 110, 64);
+        u8g2.drawStr(2, 118, "MOVE cycle");
+        u8g2.drawStr(2, 126, "SEL start/back");
     }
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
@@ -793,45 +800,47 @@ static void drawList() {
 
 static void drawCapture() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
+    u8g2.setFont(u8g2_font_6x10_tf);
 
-    char shortS[18];
-    strncpy(shortS, targetSsid, 17);
-    shortS[17] = '\0';
-    u8g2.drawStr(0, 10, shortS);
+    char shortS[11];
+    strncpy(shortS, targetSsid, 10);
+    shortS[10] = '\0';
+    u8g2.drawStr(2, 11, shortS);
+    u8g2.drawHLine(0, 14, 64);
 
-    char buf[32];
+    char buf[22];
     unsigned long elapsedSec = (millis() - captureStartTime) / 1000;
     if (eapolDropped > 0) {
-        snprintf(buf, sizeof(buf), "Ch:%d E:%u D:%u %lus",
+        snprintf(buf, sizeof(buf), "Ch%d E%u D%u %lus",
                  targetChannel, (unsigned)eapolCount, (unsigned)eapolDropped, elapsedSec);
     } else {
-        snprintf(buf, sizeof(buf), "Ch:%d EAPOL:%u %lus",
+        snprintf(buf, sizeof(buf), "Ch%d EAPOL:%u %lus",
                  targetChannel, (unsigned)eapolCount, elapsedSec);
     }
-    u8g2.drawStr(0, 22, buf);
+    u8g2.setFont(u8g2_font_5x7_tf);
+    u8g2.drawStr(2, 28, buf);
 
-    // Clear phase status
     const char *phase;
     if (hasPmkid && gotM1 && gotM2) phase = "COMPLETE+PMKID";
     else if (hasPmkid)              phase = "PMKID captured";
     else if (gotM1 && gotM2)        phase = "HS COMPLETE";
-    else if (gotM1 && !gotM2)       phase = "Got M1, wait M2";
-    else if (!gotM1 && gotM2)       phase = "Got M2, wait M1";
-    else if (eapolCount > 0)        phase = "EAPOL seen...";
-    else                            phase = deauthStopped ? "Deauth: slow" : "Deauth: active";
+    else if (gotM1 && !gotM2)       phase = "M1, wait M2";
+    else if (!gotM1 && gotM2)       phase = "M2, wait M1";
+    else if (eapolCount > 0)        phase = "EAPOL seen";
+    else                            phase = deauthStopped ? "Deauth slow" : "Deauth active";
 
-    u8g2.drawStr(0, 34, phase);
+    u8g2.drawStr(2, 44, phase);
 
-    snprintf(buf, sizeof(buf), "M1:%s M2:%s PMKID:%s",
+    snprintf(buf, sizeof(buf), "M1:%s M2:%s PK:%s",
              gotM1 ? "Y" : "-", gotM2 ? "Y" : "-", hasPmkid ? "Y" : "-");
-    u8g2.drawStr(0, 46, buf);
+    u8g2.drawStr(2, 60, buf);
 
-    u8g2.setFont(u8g2_font_5x8_tr);
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawHLine(0, 118, 64);
     if (gotM1 && gotM2) {
-        u8g2.drawStr(0, 62, "L=Save (Serial dump)");
+        u8g2.drawStr(2, 126, "SEL save (Serial)");
     } else {
-        u8g2.drawStr(0, 62, "L=Save&Stop");
+        u8g2.drawStr(2, 126, "SEL save & stop");
     }
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
@@ -839,52 +848,56 @@ static void drawCapture() {
 
 static void drawSavedMsg() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(24, 24, "Saved!");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(14, 40, "Saved!");
+    u8g2.setFont(u8g2_font_5x7_tf);
     if (hasPmkid && (gotM1 || gotM2))
-        u8g2.drawStr(4, 42, "PMKID + EAPOL");
+        u8g2.drawStr(4, 60, "PMKID + EAPOL");
     else if (hasPmkid)
-        u8g2.drawStr(8, 42, "PMKID included");
+        u8g2.drawStr(4, 60, "PMKID included");
     else if (gotM1 && gotM2)
-        u8g2.drawStr(8, 42, "Full HS (no PMKID)");
+        u8g2.drawStr(2, 60, "Full HS");
     else if (gotM1 || gotM2)
-        u8g2.drawStr(4, 42, "Partial EAPOL");
+        u8g2.drawStr(2, 60, "Partial EAPOL");
     else
-        u8g2.drawStr(16, 42, "Weak capture");
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 58, "See Serial for frames");
+        u8g2.drawStr(6, 60, "Weak capture");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 90, "See Serial");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 static void drawViewList() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 10, "Saved Handshakes");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Saved HS");
+    u8g2.drawHLine(0, 14, 64);
     uint8_t count = hsLoadCount();
     if (count == 0) {
-        u8g2.drawStr(0, 28, "No captures yet");
-        u8g2.setFont(u8g2_font_5x8_tr);
-        u8g2.drawStr(0, 62, "L=Back");
+        u8g2.drawStr(2, 36, "No captures");
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawStr(2, 126, "SEL back");
     } else {
         if (viewIndex >= count) viewIndex = count - 1;
-        int start = viewIndex > 0 ? viewIndex - 1 : 0;
-        if (viewIndex == count - 1 && count > 2) start = count - 3;
+        int start = viewIndex - 2;
         if (start < 0) start = 0;
-        for (int i = 0; i < 3; i++) {
+        if (start > count - 6) start = max(0, (int)count - 6);
+        for (int i = 0; i < 6; i++) {
             int idx = start + i;
             if (idx >= count) break;
             HandshakeEntry e;
             hsReadEntry(idx, e);
-            char line[22], shortS[12];
-            strncpy(shortS, e.ssid, 11);
-            shortS[11] = '\0';
+            char line[14], shortS[10];
+            strncpy(shortS, e.ssid, 9);
+            shortS[9] = '\0';
             char mark = (e.flags & FLAG_PMKID) ? '*' : ((e.flags & (FLAG_M1|FLAG_M2)) ? '+' : ' ');
             snprintf(line, sizeof(line), "%s%s%c", idx == viewIndex ? ">" : " ", shortS, mark);
-            u8g2.drawStr(0, 24 + i * 12, line);
+            u8g2.drawStr(2, 26 + i * 12, line);
         }
-        u8g2.setFont(u8g2_font_5x8_tr);
-        u8g2.drawStr(0, 62, "U/D R=Detail L=Back");
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawHLine(0, 110, 64);
+        u8g2.drawStr(2, 118, "MOVE cycle");
+        u8g2.drawStr(2, 126, "SEL detail/back");
     }
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
@@ -894,12 +907,13 @@ static void drawViewDetail() {
     HandshakeEntry e;
     hsReadEntry(viewIndex, e);
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_5x8_tr);
+    u8g2.setFont(u8g2_font_5x7_tf);
 
-    char shortS[22];
-    strncpy(shortS, e.ssid, 21);
-    shortS[21] = '\0';
-    u8g2.drawStr(0, 8, shortS);
+    char shortS[11];
+    strncpy(shortS, e.ssid, 10);
+    shortS[10] = '\0';
+    u8g2.drawStr(2, 10, shortS);
+    u8g2.drawHLine(0, 13, 64);
 
     char mac[18];
     snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X",
@@ -907,31 +921,33 @@ static void drawViewDetail() {
              e.bssid[3], e.bssid[4], e.bssid[5]);
     char masked[18];
     maskMAC(mac, masked);
-    u8g2.drawStr(0, 18, masked);
+    u8g2.drawStr(2, 26, masked);
 
-    char info[32];
-    snprintf(info, sizeof(info), "Ch:%d EAPOL:%u M1:%s M2:%s",
+    char info[22];
+    snprintf(info, sizeof(info), "Ch%d E%u M1:%s M2:%s",
              e.channel, e.eapol_count,
              (e.flags & FLAG_M1) ? "Y" : "-",
              (e.flags & FLAG_M2) ? "Y" : "-");
-    u8g2.drawStr(0, 28, info);
+    u8g2.drawStr(2, 40, info);
 
     if (e.flags & FLAG_PMKID) {
-        u8g2.drawStr(0, 38, "PMKID (valid):");
-        char h1[20], h2[20];
+        u8g2.drawStr(2, 56, "PMKID:");
+        char h1[18], h2[18];
         snprintf(h1, sizeof(h1), "%02X%02X%02X%02X%02X%02X%02X%02X",
                  e.pmkid[0], e.pmkid[1], e.pmkid[2], e.pmkid[3],
                  e.pmkid[4], e.pmkid[5], e.pmkid[6], e.pmkid[7]);
         snprintf(h2, sizeof(h2), "%02X%02X%02X%02X%02X%02X%02X%02X",
                  e.pmkid[8], e.pmkid[9], e.pmkid[10], e.pmkid[11],
                  e.pmkid[12], e.pmkid[13], e.pmkid[14], e.pmkid[15]);
-        u8g2.drawStr(0, 48, h1);
-        u8g2.drawStr(0, 58, h2);
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawStr(2, 70, h1);
+        u8g2.drawStr(2, 80, h2);
     } else {
-        u8g2.drawStr(0, 40, "PMKID: not present");
-        u8g2.drawStr(0, 52, "EAPOL data kept");
-        u8g2.drawStr(0, 62, "L=Back (Serial dump)");
+        u8g2.drawStr(2, 56, "No PMKID");
+        u8g2.drawStr(2, 70, "EAPOL kept");
     }
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 126, "SEL back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }

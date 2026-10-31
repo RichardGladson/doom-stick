@@ -178,17 +178,18 @@ void processScanResults() {
 void drawScanning() {
     unsigned long now = millis();
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 10, "Scanning APs...");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Scanning...");
+    u8g2.drawHLine(0, 14, 64);
 
-    char countStr[32];
-    snprintf(countStr, sizeof(countStr), "Found: %d networks", currentScanCount);
-    u8g2.drawStr(0, 25, countStr);
+    char countStr[20];
+    snprintf(countStr, sizeof(countStr), "Found: %d", currentScanCount);
+    u8g2.drawStr(2, 32, countStr);
 
-    int barWidth = 120;
-    int barHeight = 10;
+    int barWidth = 56;
+    int barHeight = 8;
     int barX = 4;
-    int barY = 35;
+    int barY = 48;
     u8g2.drawFrame(barX, barY, barWidth, barHeight);
 
     unsigned long elapsed = now - scanStartTime;
@@ -198,76 +199,77 @@ void drawScanning() {
         u8g2.drawBox(barX + 2, barY + 2, fillWidth, barHeight - 4);
     }
 
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 60, "L=Back");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 126, "SEL back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 void drawMenu() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 12, "Deauth Mode:");
-    u8g2.drawStr(0, 28, menuSelection == 0 ? "> All networks" : "  All networks");
-    u8g2.drawStr(0, 44, menuSelection == 1 ? "> Single AP" : "  Single AP");
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 62, "U/D=Move SEL=OK R=Rescan");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Deauth Mode");
+    u8g2.drawHLine(0, 14, 64);
+    u8g2.drawStr(2, 32, menuSelection == 0 ? "> All nets" : "  All nets");
+    u8g2.drawStr(2, 48, menuSelection == 1 ? "> Single AP" : "  Single AP");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawHLine(0, 118, 64);
+    u8g2.drawStr(2, 126, "MOVE next  SEL ok");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 void drawAll() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 12, "Deauthing all APs");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Deauth ALL");
+    u8g2.drawHLine(0, 14, 64);
 
-    char buf[32];
-    snprintf(buf, sizeof(buf), "Networks: %d", apCount);
-    u8g2.drawStr(0, 28, buf);
+    char buf[20];
+    snprintf(buf, sizeof(buf), "Nets: %d", apCount);
+    u8g2.drawStr(2, 32, buf);
 
     if (apCount > 0) {
-        char channels[64] = "Ch: ";
+        char channels[32] = "Ch:";
         bool channelUsed[15] = {false};
-
         for (int i = 0; i < apCount; i++) {
             int ch = apList[i].channel;
-            if (ch >= 1 && ch <= 14) {
-                channelUsed[ch] = true;
-            }
+            if (ch >= 1 && ch <= 14) channelUsed[ch] = true;
         }
-
         bool first = true;
         for (int i = 1; i <= 14; i++) {
             if (channelUsed[i]) {
-                if (!first) strcat(channels, ", ");
+                if (!first) strcat(channels, ",");
                 char chStr[4];
                 snprintf(chStr, sizeof(chStr), "%d", i);
                 strcat(channels, chStr);
                 first = false;
+                if (strlen(channels) > 18) break;
             }
         }
-
-        u8g2.drawStr(0, 44, channels);
+        u8g2.setFont(u8g2_font_5x7_tf);
+        u8g2.drawStr(2, 48, channels);
     }
 
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 62, "SEL=OK R=Rescan L=Back");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 126, "SEL back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 void drawList() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 12, "Select AP to deauth");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Select AP");
+    u8g2.drawHLine(0, 14, 64);
     if (apCount > 0) {
-        char line1[32];
         char maskedSSID[33];
         maskName(apList[apIndex].ssid, maskedSSID, sizeof(maskedSSID) - 1);
-        snprintf(line1, sizeof(line1), "%s  Ch:%d", maskedSSID,
-                 apList[apIndex].channel);
-        u8g2.drawStr(0, 28, line1);
-        char line2[24];
+        if (strlen(maskedSSID) > 10) maskedSSID[10] = 0;
+        u8g2.drawStr(2, 30, maskedSSID);
+        char chbuf[12];
+        snprintf(chbuf, sizeof(chbuf), "Ch:%d", apList[apIndex].channel);
+        u8g2.drawStr(2, 44, chbuf);
         char bssidStr[18];
         snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X",
                  apList[apIndex].bssid[0], apList[apIndex].bssid[1],
@@ -275,26 +277,31 @@ void drawList() {
                  apList[apIndex].bssid[4], apList[apIndex].bssid[5]);
         char maskedBSSID[18];
         maskMAC(bssidStr, maskedBSSID);
-        u8g2.drawStr(0, 44, maskedBSSID);
+        u8g2.setFont(u8g2_font_5x7_tf);
+        u8g2.drawStr(2, 60, maskedBSSID);
     } else {
-        u8g2.drawStr(0, 30, "No APs found");
+        u8g2.drawStr(2, 36, "No APs");
     }
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 62, "U/D=Scroll SEL=Start L=Back");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawHLine(0, 110, 64);
+    u8g2.drawStr(2, 118, "MOVE cycle");
+    u8g2.drawStr(2, 126, "SEL start/back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 void drawDeauthSingle() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 12, "Deauthing Selected AP");
-    char buf[32];
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Deauthing");
+    u8g2.drawHLine(0, 14, 64);
     char maskedSSID[33];
     maskName(apList[apIndex].ssid, maskedSSID, sizeof(maskedSSID) - 1);
-    snprintf(buf, sizeof(buf), "%s  Ch:%d", maskedSSID,
-             apList[apIndex].channel);
-    u8g2.drawStr(0, 28, buf);
+    if (strlen(maskedSSID) > 10) maskedSSID[10] = 0;
+    u8g2.drawStr(2, 30, maskedSSID);
+    char chbuf[12];
+    snprintf(chbuf, sizeof(chbuf), "Ch:%d", apList[apIndex].channel);
+    u8g2.drawStr(2, 44, chbuf);
     char mac[24];
     snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X",
              apList[apIndex].bssid[0], apList[apIndex].bssid[1],
@@ -302,9 +309,10 @@ void drawDeauthSingle() {
              apList[apIndex].bssid[4], apList[apIndex].bssid[5]);
     char maskedMAC[18];
     maskMAC(mac, maskedMAC);
-    u8g2.drawStr(0, 44, maskedMAC);
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 62, "L=Back");
+    u8g2.setFont(u8g2_font_5x7_tf);
+    u8g2.drawStr(2, 60, maskedMAC);
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 126, "SEL back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }

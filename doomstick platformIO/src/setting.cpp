@@ -270,18 +270,18 @@ void settingLoop() {
   if (showResetConfirm) {
     u8g2.setFont(u8g2_font_helvB08_tr);
     int titleWidth = u8g2.getUTF8Width("Reset XP Data?");
-    u8g2.drawStr((128 - titleWidth) / 2, 20, "Reset XP Data?");
+    u8g2.drawStr((64 - titleWidth) / 2, 20, "Reset XP Data?");
 
     u8g2.setFont(u8g2_font_6x10_tr);
     int messageWidth = u8g2.getUTF8Width("Reset to Level 1");
-    u8g2.drawStr((128 - messageWidth) / 2, 35, "Reset to Level 1");
+    u8g2.drawStr((64 - messageWidth) / 2, 35, "Reset to Level 1");
 
     u8g2.setFont(u8g2_font_4x6_tr);
     int buttonWidth = u8g2.getUTF8Width("LEFT=Cancel  RIGHT=Confirm");
-    u8g2.drawStr((128 - buttonWidth) / 2, 55, "LEFT=Cancel  RIGHT=Confirm");
+    u8g2.drawStr((64 - buttonWidth) / 2, 55, "LEFT=Cancel  RIGHT=Confirm");
   } else {
     u8g2.setFont(u8g2_font_helvB08_tr);
-    u8g2.drawStr(45, 12, "Settings");
+    u8g2.drawStr(8, 12, "Settings");
 
     u8g2.setFont(u8g2_font_6x10_tr);
 
@@ -296,25 +296,25 @@ void settingLoop() {
       switch (i) {
         case 0:
           u8g2.drawStr(10, yPos, "NeoPixel:");
-          u8g2.drawStr(85, yPos, neoPixelActive ? "On" : "Off");
+          u8g2.drawStr(40, yPos, neoPixelActive ? "On" : "Off");
           break;
         case 1:
           u8g2.drawStr(10, yPos, "Brightness:");
           char brightStr[8];
           sprintf(brightStr, "%d%%", (int)map(oledBrightness, 0, 255, 0, 100));
-          u8g2.drawStr(85, yPos, brightStr);
+          u8g2.drawStr(40, yPos, brightStr);
           break;
         case 2:
           u8g2.drawStr(10, yPos, "Fast Retry:");
-          u8g2.drawStr(85, yPos, continuousScanEnabled ? "On" : "Off");
+          u8g2.drawStr(40, yPos, continuousScanEnabled ? "On" : "Off");
           break;
         case 3:
           u8g2.drawStr(10, yPos, "Privacy:");
-          u8g2.drawStr(85, yPos, privacyModeEnabled ? "On" : "Off");
+          u8g2.drawStr(40, yPos, privacyModeEnabled ? "On" : "Off");
           break;
         case 4:
           u8g2.drawStr(10, yPos, "Password:");
-          u8g2.drawStr(85, yPos, passwordEnabled() ? "On" : "Off");
+          u8g2.drawStr(40, yPos, passwordEnabled() ? "On" : "Off");
           break;
         case 5: {
           u8g2.drawStr(10, yPos, "Uptime:");
@@ -326,7 +326,7 @@ void settingLoop() {
             sprintf(upStr, "%luh", (unsigned long)(secs / 3600UL));
           else
             sprintf(upStr, "%lum", (unsigned long)(secs / 60UL));
-          u8g2.drawStr(85, yPos, upStr);
+          u8g2.drawStr(40, yPos, upStr);
           break;
         }
       }

@@ -270,38 +270,44 @@ static const int MAX_CLONE_SSIDS = 50;
 
 static void drawBeaconSpamMenu() {
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(0, 10, "Beacon Spam Mode:");
-  u8g2.drawStr(0, 22, menuSelection == 0 ? "> Clone All" : "  Clone All");
-  u8g2.drawStr(0, 32,
-               menuSelection == 1 ? "> Clone Selected" : "  Clone Selected");
-  u8g2.drawStr(0, 42, menuSelection == 2 ? "> Custom" : "  Custom");
-  u8g2.drawStr(0, 52, menuSelection == 3 ? "> Random" : "  Random");
-  u8g2.setFont(u8g2_font_5x8_tr);
-  u8g2.drawStr(0, 64, "U/D=Move SEL=OK");
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(2, 11, "Beacon Spam");
+  u8g2.drawHLine(0, 14, 64);
+  u8g2.drawStr(2, 28, menuSelection == 0 ? "> Clone All" : "  Clone All");
+  u8g2.drawStr(2, 42, menuSelection == 1 ? "> Clone Sel." : "  Clone Sel.");
+  u8g2.drawStr(2, 56, menuSelection == 2 ? "> Custom" : "  Custom");
+  u8g2.drawStr(2, 70, menuSelection == 3 ? "> Random" : "  Random");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawHLine(0, 118, 64);
+  u8g2.drawStr(2, 126, "MOVE next  SEL ok");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }
 
 static void drawSSIDList() {
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tr);
-  u8g2.drawStr(0, 12, "Select SSID to clone");
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(2, 11, "Select SSID");
+  u8g2.drawHLine(0, 14, 64);
   if (!scannedSSIDs.empty()) {
     char maskedSSID[33];
     maskName(scannedSSIDs[ssidIndex].ssid, maskedSSID, sizeof(maskedSSID) - 1);
-    char line1[32];
-    snprintf(line1, sizeof(line1), "%s Ch:%d", maskedSSID,
-             scannedSSIDs[ssidIndex].channel);
-    u8g2.drawStr(0, 28, line1);
-    u8g2.drawStr(
-        0, 44,
-        scannedSSIDs[ssidIndex].selected ? "[*] Selected" : "[ ] Not selected");
+    // Truncate for 64px
+    if (strlen(maskedSSID) > 10) maskedSSID[10] = 0;
+    char line1[20];
+    snprintf(line1, sizeof(line1), "%s", maskedSSID);
+    u8g2.drawStr(2, 30, line1);
+    char chbuf[12];
+    snprintf(chbuf, sizeof(chbuf), "Ch:%d", scannedSSIDs[ssidIndex].channel);
+    u8g2.drawStr(2, 44, chbuf);
+    u8g2.drawStr(2, 60, scannedSSIDs[ssidIndex].selected ? "[*] Selected" : "[ ] Not sel.");
   } else {
-    u8g2.drawStr(0, 30, "No SSIDs found");
+    u8g2.drawStr(2, 36, "No SSIDs");
   }
-  u8g2.setFont(u8g2_font_5x8_tr);
-  u8g2.drawStr(0, 62, "U/D=Move SEL=Toggle R=Rescan L=Back");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawHLine(0, 110, 64);
+  u8g2.drawStr(2, 118, "MOVE cycle");
+  u8g2.drawStr(2, 126, "SEL toggle/back");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }
@@ -384,17 +390,18 @@ static void updateSSIDScan() {
 
   if (refresh || now - beacon_lastDisplayUpdate > DISPLAY_UPDATE_INTERVAL) {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(0, 10, "Scanning WiFi...");
-    char buf[32];
-    snprintf(buf, sizeof(buf), "Found: %d networks", (int)scannedSSIDs.size());
-    u8g2.drawStr(0, 25, buf);
-    u8g2.drawFrame(4, 35, 120, 10);
-    int fill = (int)(((now - beacon_scanStartTime) * 116UL) / SCAN_DURATION);
-    if (fill > 116) fill = 116;
-    if (fill > 0) u8g2.drawBox(6, 37, fill, 6);
-    u8g2.setFont(u8g2_font_5x8_tr);
-    u8g2.drawStr(0, 60, "L=Back");
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "Scanning...");
+    u8g2.drawHLine(0, 14, 64);
+    char buf[20];
+    snprintf(buf, sizeof(buf), "Found: %d", (int)scannedSSIDs.size());
+    u8g2.drawStr(2, 32, buf);
+    u8g2.drawFrame(4, 48, 56, 8);
+    int fill = (int)(((now - beacon_scanStartTime) * 52UL) / SCAN_DURATION);
+    if (fill > 52) fill = 52;
+    if (fill > 0) u8g2.drawBox(6, 50, fill, 4);
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 126, "SEL back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
     beacon_lastDisplayUpdate = now;
@@ -544,14 +551,16 @@ void beaconSpamLoop() {
       if (needsRedraw) {
         needsRedraw = false;
         u8g2.clearBuffer();
-        u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(0, 10, "Clone All SSIDs");
-        char buf[32];
+        u8g2.setFont(u8g2_font_6x10_tf);
+        u8g2.drawStr(2, 11, "Clone All");
+        u8g2.drawHLine(0, 14, 64);
+        char buf[20];
         snprintf(buf, sizeof(buf), "Count: %d", (int)scannedSSIDs.size());
-        u8g2.drawStr(0, 25, buf);
-        u8g2.setFont(u8g2_font_5x8_tr);
-        u8g2.drawStr(0, 40, "Spamming on CH: 1,6,11");
-        u8g2.drawStr(0, 62, "L=Back");
+        u8g2.drawStr(2, 32, buf);
+        u8g2.setFont(u8g2_font_5x7_tf);
+        u8g2.drawStr(2, 48, "CH 1,6,11");
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawStr(2, 126, "SEL back");
         u8g2.sendBuffer();
         displayMirrorSend(u8g2);
       }
@@ -632,11 +641,13 @@ void beaconSpamLoop() {
       if (needsRedraw) {
         needsRedraw = false;
         u8g2.clearBuffer();
-        u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(0, 10, "Beacon Spam: Custom");
-        u8g2.setFont(u8g2_font_5x8_tr);
-        u8g2.drawStr(0, 25, "Spamming on CH: 1,6,11");
-        u8g2.drawStr(0, 62, "L=Back");
+        u8g2.setFont(u8g2_font_6x10_tf);
+        u8g2.drawStr(2, 11, "Custom Spam");
+        u8g2.drawHLine(0, 14, 64);
+        u8g2.setFont(u8g2_font_5x7_tf);
+        u8g2.drawStr(2, 36, "CH 1,6,11");
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawStr(2, 126, "SEL back");
         u8g2.sendBuffer();
         displayMirrorSend(u8g2);
       }
@@ -669,11 +680,13 @@ void beaconSpamLoop() {
       if (needsRedraw) {
         needsRedraw = false;
         u8g2.clearBuffer();
-        u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(0, 10, "Beacon Spam: Random");
-        u8g2.setFont(u8g2_font_5x8_tr);
-        u8g2.drawStr(0, 25, "Spamming on CH: 1,6,11");
-        u8g2.drawStr(0, 62, "L=Back");
+        u8g2.setFont(u8g2_font_6x10_tf);
+        u8g2.drawStr(2, 11, "Random Spam");
+        u8g2.drawHLine(0, 14, 64);
+        u8g2.setFont(u8g2_font_5x7_tf);
+        u8g2.drawStr(2, 36, "CH 1,6,11");
+        u8g2.setFont(u8g2_font_4x6_tf);
+        u8g2.drawStr(2, 126, "SEL back");
         u8g2.sendBuffer();
         displayMirrorSend(u8g2);
       }

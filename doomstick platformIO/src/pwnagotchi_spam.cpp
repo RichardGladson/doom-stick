@@ -281,18 +281,16 @@ void pwnagotchiSpamLoop() {
     needsRedraw = false;
     u8g2.clearBuffer();
 
-    u8g2.setFont(u8g2_font_helvB10_tr);
-    const char* title = "Pwnagotchi Spam";
-    int titleWidth = u8g2.getUTF8Width(title);
-    u8g2.drawStr((128 - titleWidth) / 2, 12, title);
-    u8g2.drawHLine(10, 15, 108);
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(4, 11, "Pwnagotchi");
+    u8g2.drawHLine(0, 14, 64);
 
-    u8g2.setFont(u8g2_font_helvB08_tr);
+    u8g2.setFont(u8g2_font_6x10_tf);
     const char* status = spamActive ? "ACTIVE" : "STOPPED";
     int statusWidth = u8g2.getUTF8Width(status);
-    u8g2.drawStr((128 - statusWidth) / 2, 26, status);
+    u8g2.drawStr((64 - statusWidth) / 2, 36, status);
 
-    u8g2.setFont(u8g2_font_helvR08_tr);
+    u8g2.setFont(u8g2_font_5x7_tf);
     const char* mode;
     switch (currentMode) {
         case NORMAL_MODE: mode = "Normal"; break;
@@ -300,22 +298,17 @@ void pwnagotchiSpamLoop() {
         case DOS_MODE: mode = "DoS Mode"; break;
     }
     int modeWidth = u8g2.getUTF8Width(mode);
-    u8g2.drawStr((128 - modeWidth) / 2, 36, mode);
+    u8g2.drawStr((64 - modeWidth) / 2, 54, mode);
 
-    char statsText[32];
+    char statsText[20];
     snprintf(statsText, sizeof(statsText), "Sent: %lu", beaconsSent);
     int statsWidth = u8g2.getUTF8Width(statsText);
-    u8g2.drawStr((128 - statsWidth) / 2, 46, statsText);
+    u8g2.drawStr((64 - statsWidth) / 2, 70, statsText);
 
-    u8g2.setFont(u8g2_font_4x6_tr);
-    const char* line1 = "UP=Start/Stop  DOWN=Mode";
-    const char* line2 = "L=Back";
-
-    int line1Width = u8g2.getUTF8Width(line1);
-    int line2Width = u8g2.getUTF8Width(line2);
-
-    u8g2.drawStr((128 - line1Width) / 2, 56, line1);
-    u8g2.drawStr((128 - line2Width) / 2, 64, line2);
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawHLine(0, 110, 64);
+    u8g2.drawStr(2, 118, "MOVE mode");
+    u8g2.drawStr(2, 126, "SEL start/stop");
 
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
