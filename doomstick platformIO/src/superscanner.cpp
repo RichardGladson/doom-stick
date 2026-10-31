@@ -771,64 +771,73 @@ static void stopBleScan() {
 // ---------------------------------------------------------------------------
 static void drawPresetSelect() {
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_helvB08_tr);
-  u8g2.drawStr(28, 10, "Superscanner");
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(2, 11, "SuperSniffer");
+  u8g2.drawHLine(0, 14, 64);
 
-  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.setFont(u8g2_font_5x7_tf);
   for (int i = 0; i < PRESET_COUNT; i++) {
-    int y = 22 + i * 11;
+    int y = 28 + i * 12;
     if (i == presetIndex) {
-      u8g2.drawStr(2, y, ">");
+      u8g2.drawBox(0, y - 9, 64, 11);
+      u8g2.setDrawColor(0);
+      u8g2.drawStr(2, y, presetTitles[i]);
+      u8g2.setDrawColor(1);
+    } else {
+      u8g2.drawStr(2, y, presetTitles[i]);
     }
-    u8g2.drawStr(12, y, presetTitles[i]);
   }
-  u8g2.setFont(u8g2_font_4x6_tr);
-  u8g2.drawStr(2, 63, "SEL=start  LEFT=back");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawHLine(0, 118, 64);
+  u8g2.drawStr(2, 126, "MOVE next  SEL start");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }
 
 static void drawScanScreen() {
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x10_tr);
+  u8g2.setFont(u8g2_font_5x7_tf);
 
-  char header[32];
-  snprintf(header, sizeof(header), "SS:%s", presetTitles[presetIndex]);
-  u8g2.drawStr(0, 9, header);
+  char header[14];
+  snprintf(header, sizeof(header), "%s", presetTitles[presetIndex]);
+  u8g2.drawStr(2, 10, header);
+  u8g2.drawHLine(0, 13, 64);
 
-  char countStr[16];
+  char countStr[10];
   snprintf(countStr, sizeof(countStr), "%d", (int)foundDevices.size());
-  u8g2.drawStr(110, 9, countStr);
+  u8g2.drawStr(50, 10, countStr);
 
-  // Scanning indicator
-  u8g2.setFont(u8g2_font_4x6_tr);
-  u8g2.drawStr(0, 16, scanning ? "scanning..." : "starting...");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawStr(2, 22, scanning ? "scanning..." : "starting...");
 
-  u8g2.setFont(u8g2_font_5x8_tr);
-  int visible = 5;
+  u8g2.setFont(u8g2_font_5x7_tf);
+  int visible = 7;
   if (listIndex < listStart) listStart = listIndex;
   if (listIndex >= listStart + visible) listStart = listIndex - visible + 1;
 
   for (int i = 0; i < visible; i++) {
     int idx = listStart + i;
     if (idx >= (int)foundDevices.size()) break;
-    int y = 25 + i * 8;
+    int y = 34 + i * 11;
     if (idx == listIndex) {
-      u8g2.drawStr(0, y, ">");
+      u8g2.drawBox(0, y - 9, 64, 11);
+      u8g2.setDrawColor(0);
     }
     const SuperDevice &d = foundDevices[idx];
-    char line[40];
-    snprintf(line, sizeof(line), "%s %ddB", d.typeName, d.rssi);
-    u8g2.drawStr(8, y, line);
+    char line[16];
+    snprintf(line, sizeof(line), "%s %d", d.typeName, d.rssi);
+    u8g2.drawStr(2, y, line);
+    u8g2.setDrawColor(1);
   }
 
   if (foundDevices.empty()) {
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.drawStr(20, 40, "No devices yet");
+    u8g2.setFont(u8g2_font_5x7_tf);
+    u8g2.drawStr(8, 60, "No devices");
   }
 
-  u8g2.setFont(u8g2_font_4x6_tr);
-  u8g2.drawStr(0, 63, "UP/DN scroll  LEFT=back");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawHLine(0, 118, 64);
+  u8g2.drawStr(2, 126, "MOVE scroll  SEL back");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }

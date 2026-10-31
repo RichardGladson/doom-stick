@@ -320,67 +320,67 @@ static void hopChannel() {
 // ============================================================================
 static void drawScanScreen() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_helvR08_tr);
-    u8g2.drawStr(4, 10, "CAMERA DEAUTHER");
-    u8g2.drawHLine(0, 13, 128);
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "CAM DEAUTH");
+    u8g2.drawHLine(0, 14, 64);
 
-    u8g2.setFont(u8g2_font_5x7_tr);
-    char line[32];
-    snprintf(line, sizeof(line), "CH:%d%s  APs:%d  CAMs:%d",
-             g_channel, g_channelLocked ? "*" : " ", g_apCount, g_targetCount);
-    u8g2.drawStr(2, 22, line);
-
-    snprintf(line, sizeof(line), "Frames TX: %lu", g_totalDeauths);
-    u8g2.drawStr(2, 31, line);
+    u8g2.setFont(u8g2_font_5x7_tf);
+    char line[20];
+    snprintf(line, sizeof(line), "CH:%d%s APs:%d",
+             g_channel, g_channelLocked ? "*" : " ", g_apCount);
+    u8g2.drawStr(2, 28, line);
+    snprintf(line, sizeof(line), "CAMs:%d TX:%lu", g_targetCount, g_totalDeauths);
+    u8g2.drawStr(2, 40, line);
 
     if (g_targetCount == 0) {
-        u8g2.drawStr(10, 46, "Scanning for cameras...");
+        u8g2.drawStr(2, 60, "Scanning...");
     } else {
-        // Show first 2 targets
-        for (int i = 0; i < g_targetCount && i < 2; i++) {
+        for (int i = 0; i < g_targetCount && i < 3; i++) {
             const char* brand = (g_targets[i].ouiIndex != 0xFF)
                                 ? cameraOUIs[g_targets[i].ouiIndex].brand
-                                : "Unknown";
-            snprintf(line, sizeof(line), "%s %02X:%02X:%02X...",
+                                : "???";
+            snprintf(line, sizeof(line), "%s %02X%02X",
                      brand,
                      g_targets[i].clientMAC[0],
-                     g_targets[i].clientMAC[1],
-                     g_targets[i].clientMAC[2]);
-            u8g2.drawStr(2, 42 + (i * 9), line);
+                     g_targets[i].clientMAC[1]);
+            u8g2.drawStr(2, 56 + (i * 12), line);
         }
     }
 
-    u8g2.drawStr(2, 62, "R=Targets SEL=Toggle");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawHLine(0, 110, 64);
+    u8g2.drawStr(2, 118, "MOVE targets");
+    u8g2.drawStr(2, 126, "SEL toggle");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 static void drawTargetsScreen() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_helvR08_tr);
-    u8g2.drawStr(4, 10, "TARGETS");
-    u8g2.drawHLine(0, 13, 128);
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, "TARGETS");
+    u8g2.drawHLine(0, 14, 64);
 
-    u8g2.setFont(u8g2_font_5x7_tr);
+    u8g2.setFont(u8g2_font_5x7_tf);
     if (g_targetCount == 0) {
-        u8g2.drawStr(10, 36, "No cameras found");
+        u8g2.drawStr(2, 40, "No cameras");
     } else {
-        int start = (g_selectedTarget > 3) ? g_selectedTarget - 2 : 0;
-        for (int i = start; i < g_targetCount && (i - start) < 4; i++) {
+        int start = g_selectedTarget - 2;
+        if (start < 0) start = 0;
+        if (start > g_targetCount - 6) start = max(0, g_targetCount - 6);
+        for (int i = start; i < g_targetCount && (i - start) < 6; i++) {
             const char* brand = (g_targets[i].ouiIndex != 0xFF)
                                 ? cameraOUIs[g_targets[i].ouiIndex].brand
                                 : "???";
-            char line[32];
+            char line[16];
             bool sel = (i == g_selectedTarget);
-            snprintf(line, sizeof(line), "%s%s %02X:%02X ch%d",
+            snprintf(line, sizeof(line), "%s%s ch%d",
                      sel ? ">" : " ",
                      brand,
-                     g_targets[i].clientMAC[0],
-                     g_targets[i].clientMAC[1],
                      g_targets[i].channel);
-            int y = 22 + ((i - start) * 10);
+            int y = 26 + ((i - start) * 12);
             if (sel) {
-                u8g2.drawBox(0, y - 7, 128, 9);
+                u8g2.drawBox(0, y - 9, 64, 11);
                 u8g2.setDrawColor(0);
             }
             u8g2.drawStr(2, y, line);
@@ -388,33 +388,35 @@ static void drawTargetsScreen() {
         }
     }
 
-    u8g2.drawStr(2, 62, "U/D=Sel SEL=Lock L=Back");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawHLine(0, 110, 64);
+    u8g2.drawStr(2, 118, "MOVE select");
+    u8g2.drawStr(2, 126, "SEL lock/back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }
 
 static void drawActiveScreen() {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_helvR08_tr);
-    u8g2.drawStr(4, 10, g_channelLocked ? "LOCKED" : "HOPPING");
-    u8g2.drawHLine(0, 13, 128);
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(2, 11, g_channelLocked ? "LOCKED" : "HOPPING");
+    u8g2.drawHLine(0, 14, 64);
 
-    u8g2.setFont(u8g2_font_5x7_tr);
-    char line[32];
-    snprintf(line, sizeof(line), "CH:%d  DEAUTH: ON", g_channel);
-    u8g2.drawStr(2, 24, line);
+    u8g2.setFont(u8g2_font_5x7_tf);
+    char line[20];
+    snprintf(line, sizeof(line), "CH:%d DEAUTH ON", g_channel);
+    u8g2.drawStr(2, 30, line);
 
     int activeCount = 0;
     for (int i = 0; i < g_targetCount; i++) {
         if (g_targets[i].active) activeCount++;
     }
-    snprintf(line, sizeof(line), "Targets: %d/%d", activeCount, g_targetCount);
-    u8g2.drawStr(2, 33, line);
+    snprintf(line, sizeof(line), "Tgts: %d/%d", activeCount, g_targetCount);
+    u8g2.drawStr(2, 44, line);
 
-    snprintf(line, sizeof(line), "Frames TX: %lu", g_totalDeauths);
-    u8g2.drawStr(2, 42, line);
+    snprintf(line, sizeof(line), "TX: %lu", g_totalDeauths);
+    u8g2.drawStr(2, 58, line);
 
-    // Animated indicator
     static uint32_t lastBlink = 0;
     static bool blinkState = false;
     if (millis() - lastBlink > 250) {
@@ -422,12 +424,13 @@ static void drawActiveScreen() {
         blinkState = !blinkState;
     }
     if (blinkState) {
-        u8g2.drawBox(110, 20, 12, 8);
+        u8g2.drawBox(50, 70, 10, 8);
     } else {
-        u8g2.drawFrame(110, 20, 12, 8);
+        u8g2.drawFrame(50, 70, 10, 8);
     }
 
-    u8g2.drawStr(2, 62, "SEL=Stop L=Back");
+    u8g2.setFont(u8g2_font_4x6_tf);
+    u8g2.drawStr(2, 126, "SEL stop/back");
     u8g2.sendBuffer();
     displayMirrorSend(u8g2);
 }

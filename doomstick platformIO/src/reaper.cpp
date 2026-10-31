@@ -644,25 +644,27 @@ void reaperUiCleanup() {
 
 static void drawSearching() {
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_helvR08_tr);
-  u8g2.drawStr(8, 14, "REAPER LINK");
-  u8g2.drawHLine(0, 18, 128);
-  u8g2.drawStr(10, 36, "Searching...");
-  u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(4, 52, "Power on ESP32-Reaper");
-  u8g2.drawStr(4, 62, "SEL to exit");
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(4, 11, "REAPER");
+  u8g2.drawHLine(0, 14, 64);
+  u8g2.drawStr(4, 40, "Searching...");
+  u8g2.setFont(u8g2_font_5x7_tf);
+  u8g2.drawStr(2, 60, "Power on");
+  u8g2.drawStr(2, 72, "ESP32-Reaper");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawStr(2, 126, "SEL exit");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }
 
 static void drawError() {
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_helvR08_tr);
-  u8g2.drawStr(8, 14, "REAPER LINK");
-  u8g2.drawHLine(0, 18, 128);
-  u8g2.drawStr(16, 40, "ESP-NOW ERROR");
-  u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(4, 58, "SEL to exit");
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(4, 11, "REAPER");
+  u8g2.drawHLine(0, 14, 64);
+  u8g2.drawStr(2, 48, "ESP-NOW ERR");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawStr(2, 126, "SEL exit");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }
@@ -672,34 +674,37 @@ static void drawPaired() {
   const uint8_t* mac = g_reaper.getReaperMac();
 
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_helvR08_tr);
-  u8g2.drawStr(8, 12, "REAPER PAIRED");
-  u8g2.drawHLine(0, 15, 128);
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.drawStr(4, 11, "PAIRED");
+  u8g2.drawHLine(0, 14, 64);
 
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  u8g2.setFont(u8g2_font_5x7_tr);
-  u8g2.drawStr(2, 24, macStr);
+  u8g2.setFont(u8g2_font_5x7_tf);
+  u8g2.drawStr(2, 28, macStr);
 
-  char line[32];
+  char line[20];
   snprintf(line, sizeof(line), "Mode:%s",
            Protocol::modeToString(static_cast<OperatingMode>(st.mode)));
-  u8g2.drawStr(2, 33, line);
+  u8g2.drawStr(2, 42, line);
 
   snprintf(line, sizeof(line), "R1:%s R2:%s R3:%s",
            (st.radio_status & 0x01) ? "OK" : "--",
            (st.radio_status & 0x02) ? "OK" : "--",
            (st.radio_status & 0x04) ? "OK" : "--");
-  u8g2.drawStr(2, 42, line);
+  u8g2.drawStr(2, 56, line);
 
   const char* act = pairedActions[menuIndex];
-  u8g2.setFont(u8g2_font_helvR08_tr);
+  u8g2.setFont(u8g2_font_6x10_tf);
   int tw = u8g2.getStrWidth(act);
-  u8g2.drawBox(0, 48, 128, 16);
+  u8g2.drawBox(0, 80, 64, 16);
   u8g2.setDrawColor(0);
-  u8g2.drawStr((128 - tw) / 2, 60, act);
+  u8g2.drawStr((64 - tw) / 2, 92, act);
   u8g2.setDrawColor(1);
+
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawStr(2, 126, "MOVE act  SEL go");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }
