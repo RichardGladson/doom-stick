@@ -1,16 +1,7 @@
 /*
-    doomstick - controlled-environment subset of doomBOX
-    Original: doomBOX by Richard Gladson
-    https://github.com/RichardGladson/doomBOX
-    Copyright (c) 2026 Richard Gladson
-
-    Licensed under the GNU General Public License v3.0
-    https://www.gnu.org/licenses/gpl-3.0.html
-
-    SPDX-License-Identifier: GPL-3.0-only
-
+    doomstick
     Hardware: ESP32-C3 SuperMini
-              0.96" SSD1306 OLED (128x64 software / portrait mount)
+              0.96" SSD1306 OLED in PORTRAIT (64×128)
               2 buttons: MOVE (GPIO3), SELECT (GPIO10)
               I2C: SDA=GPIO6, SCL=GPIO7
 */
@@ -33,12 +24,12 @@
 #include "../include/superscanner.h"
 #include "../include/reaper_ui.h"
 
-// Keep original type so existing modules compile unchanged
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+// Portrait orientation: 64 wide × 128 tall
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R1, U8X8_PIN_NONE);
 
 bool dangerousActionsEnabled = true;
 
-// ---- sleep / activity stubs (required by modules) ----
+// ---- sleep / activity stubs ----
 unsigned long lastActivity = 0;
 
 void updateLastActivity() {
@@ -72,9 +63,9 @@ AppEntry apps[] = {
   { "Beacon Spam",      beaconSpamSetup,         beaconSpamLoop,         cleanupWiFi },
   { "WiFi Deauth",      deauthSetup,             deauthLoop,             cleanupWiFi },
   { "SuperSniffer",     superscannerSetup,       superscannerLoop,       superscannerCleanup },
-  { "Camera Deauther",  cameraDeautherSetup,     cameraDeautherLoop,     cameraDeautherCleanup },
-  { "PMKID/EAPOL Cap",  handshakeCaptureSetup,   handshakeCaptureLoop,   cleanupWiFi },
-  { "Pwnagotchi Spam",  pwnagotchiSpamSetup,     pwnagotchiSpamLoop,     cleanupWiFi },
+  { "Camera Deauth",    cameraDeautherSetup,     cameraDeautherLoop,     cameraDeautherCleanup },
+  { "PMKID/EAPOL",      handshakeCaptureSetup,   handshakeCaptureLoop,   cleanupWiFi },
+  { "Pwnagotchi",       pwnagotchiSpamSetup,     pwnagotchiSpamLoop,     cleanupWiFi },
   { "Reaper",           reaperUiSetup,           reaperUiLoop,           reaperUiCleanup },
 };
 constexpr int APP_COUNT = sizeof(apps) / sizeof(apps[0]);
@@ -84,20 +75,22 @@ bool inApp = false;
 
 void drawMenu() {
   u8g2.clearBuffer();
+
+  // Title
   u8g2.setFont(u8g2_font_6x10_tf);
-  u8g2.drawStr(0, 10, "doomstick");
-  u8g2.drawHLine(0, 12, 128);
+  u8g2.drawStr(4, 11, "doomstick");
+  u8g2.drawHLine(0, 14, 64);
 
-  // Show 4 items around selection
-  int start = selected - 1;
-  if (start < 0) start = 0;
-  if (start > APP_COUNT - 4) start = max(0, APP_COUNT - 4);
+  // Show up to 7 items (extra height in portrait)
+  int start = 0;
+  if (selected > 5) start = selected - 5;
+  if (start > APP_COUNT - 7) start = max(0, APP_COUNT - 7);
 
-  for (int i = 0; i < 4 && (start + i) < APP_COUNT; i++) {
+  for (int i = 0; i < 7 && (start + i) < APP_COUNT; i++) {
     int idx = start + i;
-    int y = 24 + i * 12;
+    int y = 26 + i * 13;
     if (idx == selected) {
-      u8g2.drawBox(0, y - 9, 128, 11);
+      u8g2.drawBox(0, y - 10, 64, 12);
       u8g2.setDrawColor(0);
       u8g2.drawStr(2, y, apps[idx].name);
       u8g2.setDrawColor(1);
@@ -105,8 +98,11 @@ void drawMenu() {
       u8g2.drawStr(2, y, apps[idx].name);
     }
   }
-  u8g2.setFont(u8g2_font_5x7_tf);
-  u8g2.drawStr(0, 63, "MOVE=next  SEL=run");
+
+  // Footer
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawHLine(0, 118, 64);
+  u8g2.drawStr(2, 126, "MOVE next  SEL run");
   u8g2.sendBuffer();
   displayMirrorSend(u8g2);
 }
@@ -121,11 +117,15 @@ void setup() {
   Wire.begin(OLED_SDA, OLED_SCL);
   u8g2.begin();
   u8g2.setContrast(200);
+
+  // Splash
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
-  u8g2.drawStr(20, 32, "doomstick");
+  u8g2.drawStr(8, 60, "doomstick");
+  u8g2.setFont(u8g2_font_4x6_tf);
+  u8g2.drawStr(10, 78, "portrait mode");
   u8g2.sendBuffer();
-  delay(800);
+  delay(900);
 
   displayMirrorSetup();
   updateLastActivity();
@@ -154,12 +154,9 @@ void loop() {
       updateLastActivity();
       while (digitalRead(BUTTON_PIN_SELECT) == LOW) delay(10);
 
-      // Launch app
       inApp = true;
       if (apps[selected].setup) apps[selected].setup();
 
-      // App owns the loop until user exits via its own back logic
-      // or we detect a long SELECT hold as emergency exit
       unsigned long holdStart = 0;
       while (inApp) {
         if (apps[selected].loop) apps[selected].loop();
